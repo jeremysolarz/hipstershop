@@ -39,7 +39,7 @@ const logger = pino({
 const request = {
   from: {
     currency_code: 'CHF',
-    units: 300,
+    units: 400,
     nanos: 0
   },
   to_code: 'EUR'
