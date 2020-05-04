@@ -1,7 +1,12 @@
-# Hipster Shop: Cloud-Native Microservices Demo Application
+<p align="center">
+<img src="src/frontend/static/icons/Hipster_HeroLogoCyan.svg" width="300"/>
+</p>
 
-This project contains a 10-tier microservices application. The application is a
-web-based e-commerce app called **“Hipster Shop”** where users can browse items,
+
+
+**Online Boutique** is a cloud-native microservices demo application.
+Online Boutique consists of a 10-tier microservices application. The application is a
+web-based e-commerce app where users can browse items,
 add them to the cart, and purchase them.
 
 **Google uses this application to demonstrate use of technologies like
@@ -15,15 +20,17 @@ If you’re using this demo, please **★Star** this repository to show your int
 > [go/microservices-demo](http://go/microservices-demo) if you are using this
 > application.
 
+Looking for the old Hipster Shop frontend interface? Use the [manifests](https://github.com/GoogleCloudPlatform/microservices-demo/tree/v0.1.5/kubernetes-manifests) in release [v0.1.5](https://github.com/GoogleCloudPlatform/microservices-demo/releases/v0.1.5).
+
 ## Screenshots
 
 | Home Page                                                                                                         | Checkout Screen                                                                                                    |
 | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| [![Screenshot of store homepage](./docs/img/hipster-shop-frontend-1.png)](./docs/img/hipster-shop-frontend-1.png) | [![Screenshot of checkout screen](./docs/img/hipster-shop-frontend-2.png)](./docs/img/hipster-shop-frontend-2.png) |
+| [![Screenshot of store homepage](./docs/img/online-boutique-frontend-1.png)](./docs/img/online-boutique-frontend-1.png) | [![Screenshot of checkout screen](./docs/img/online-boutique-frontend-2.png)](./docs/img/online-boutique-frontend-2.png) |
 
 ## Service Architecture
 
-**Hipster Shop** is composed of many microservices written in different
+**Online Boutique** is composed of many microservices written in different
 languages that talk to each other over gRPC.
 
 [![Architecture of
@@ -72,12 +79,13 @@ We offer the following installation methods:
 
 1. **Running locally** (~20 minutes) You will build
    and deploy microservices images to a single-node Kubernetes cluster running
-   on your development machine. There are two options to run a Kubernetes
+   on your development machine. There are three options to run a Kubernetes
    cluster locally for this demo:
-   - [Minikube](https://github.com/kubernetes/minikube). Recommended for the
+   - [Minikube](https://github.com/kubernetes/minikube). Recommended for
      Linux hosts (also supports Mac/Windows).
    - [Docker for Desktop](https://www.docker.com/products/docker-desktop).
      Recommended for Mac/Windows.
+   - [Kind](https://www.docker.com/products/docker-desktop). Supports Mac/Windows/Linux.
 
 1. **Running on Google Kubernetes Engine (GKE)”** (~30 minutes) You will build,
    upload and deploy the container images to a Kubernetes cluster on Google
@@ -98,28 +106,34 @@ We offer the following installation methods:
    - kubectl (can be installed via `gcloud components install kubectl`)
    - Local Kubernetes cluster deployment tool:
         - [Minikube (recommended for
-         Linux)](https://kubernetes.io/docs/setup/minikube/).
-        - Docker for Desktop (recommended for Mac/Windows): It provides Kubernetes support as [noted
-     here](https://docs.docker.com/docker-for-mac/kubernetes/).
+         Linux)](https://kubernetes.io/docs/setup/minikube/)
+        - [Docker for Desktop (recommended for Mac/Windows)](https://www.docker.com/products/docker-desktop)
+          - It provides Kubernetes support as [noted
+     here](https://docs.docker.com/docker-for-mac/kubernetes/)
+        - [Kind](https://github.com/kubernetes-sigs/kind)
    - [skaffold]( https://skaffold.dev/docs/install/) (ensure version ≥v0.20)
 
 1. Launch the local Kubernetes cluster with one of the following tools:
 
-    - Launch Minikube (tested with Ubuntu Linux). Please, ensure that the
+    - To launch **Minikube** (tested with Ubuntu Linux). Please, ensure that the
        local Kubernetes cluster has at least:
         - 4 CPU's
         - 4.0 GiB memory
 
-        To run a Kubernetes cluster with Minikube using the described configuration, please run:
+      ```shell
+      minikube start --cpus=4 --memory 4096
+      ```
 
-    ```shell
-    minikube start --cpus=4 --memory 4096
-    ```
-    
-    - Launch “Docker for Desktop” (tested with Mac/Windows). Go to Preferences:
+    - To launch **Docker for Desktop** (tested with Mac/Windows). Go to Preferences:
         - choose “Enable Kubernetes”,
         - set CPUs to at least 3, and Memory to at least 6.0 GiB
         - on the "Disk" tab, set at least 32 GB disk space
+
+    - To launch a **Kind** cluster:
+
+      ```shell
+      kind create cluster
+      ```
 
 1. Run `kubectl get nodes` to verify you're connected to “Kubernetes on Docker”.
 
@@ -127,9 +141,23 @@ We offer the following installation methods:
    This will build and deploy the application. If you need to rebuild the images
    automatically as you refactor the code, run `skaffold dev` command.
 
-1. Run `kubectl get pods` to verify the Pods are ready and running. The
-   application frontend should be available at http://localhost:80 on your
-   machine.
+1. Run `kubectl get pods` to verify the Pods are ready and running.
+
+1. Access the web frontend through your browser
+    - **Minikube** requires you to run a command to access the frontend service:
+
+    ```shell
+    minikube service frontend-external
+    ```
+
+    - **Docker For Desktop** should automatically provide the frontend at http://localhost:80
+
+    - **Kind** does not provision an IP address for the service.
+      You must run a port-forwarding process to access the frontend at http://localhost:8080:
+
+    ```shell
+    kubectl port-forward deployment/frontend 8080:8080
+    ```
 
 ### Option 2: Running on Google Kubernetes Engine (GKE)
 
@@ -249,7 +277,21 @@ by deploying the [release manifest](./release) directly to an existing cluster.
    kubectl apply -f ./istio-manifests
    ```
 
-5. Deploy the application with `skaffold run --default-repo=gcr.io/[PROJECT_ID]`.
+5. In the root of this repository, run `skaffold run --default-repo=gcr.io/[PROJECT_ID]`,
+    where [PROJECT_ID] is your GCP project ID.
+
+    This command:
+
+    - builds the container images
+    - pushes them to GCR
+    - applies the `./kubernetes-manifests` deploying the application to
+      Kubernetes.
+
+    **Troubleshooting:** If you get "No space left on device" error on Google
+    Cloud Shell, you can build the images on Google Cloud Build: [Enable the
+    Cloud Build
+    API](https://console.cloud.google.com/flows/enableapi?apiid=cloudbuild.googleapis.com),
+    then run `skaffold run -p gcb --default-repo=gcr.io/[PROJECT_ID]` instead.
 
 6. Run `kubectl get pods` to see pods are in a healthy and ready state.
 
@@ -275,7 +317,7 @@ If you've deployed the application with `kubectl apply -f [...]`, you can
 run `kubectl delete -f [...]` with the same argument to clean up the deployed
 resources.
 
-## Conferences featuring Hipster Shop
+## Conferences featuring Online Boutique
 
 - [Google Cloud Next'18 London – Keynote](https://youtu.be/nIq2pkNcfEI?t=3071)
   showing Stackdriver Incident Response Management
